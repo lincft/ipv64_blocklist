@@ -44,7 +44,7 @@ chmod 700 "$WORK_DIR" "$BLOCKLIST_DIR" "$CONF_DIR"
 touch "$LOG_FILE"
 chmod 640 "$LOG_FILE"
 # 3) Konfigurationsdateien initial befüllen
-echo "https://ipv64.net/blocklists/ipv64_blocklist_all.txt" >"$URL_FILE"
+echo "https://ipv64.net/blocklists/ipv64_blocklist_blocklistde_all.txt" >"$URL_FILE"
 echo "OnCalendar=daily"      >"$SERVICE_CONF"
 echo "OnBootSec=1min"        >>"$SERVICE_CONF"
 read -rp "IPV64-Chain in INPUT-Chain einfügen? [J/n] " ans

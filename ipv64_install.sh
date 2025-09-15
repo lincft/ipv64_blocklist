@@ -89,7 +89,7 @@ ExecStartPre=/usr/bin/env bash -c "\
 source $SERVICE_CONF; \
 iptables -nL IPV64      &>/dev/null || iptables -N IPV64; \
 if [ \"\$AddInputChain\" = true ]; then iptables -C INPUT -j IPV64 &>/dev/null || iptables -I INPUT -j IPV64; fi; \
-if [ \"\$AddDockerChain\" = true ] && iptables -nL DOCKER-USER &>/dev/null; then iptables -C DOCKER-USER -j IPV64 &>/dev/null || iptables -I DOCKER-USER -j IPV64;
+if [ \"\$AddDockerChain\" = true ] && iptables -nL DOCKER-USER &>/dev/null; then iptables -C DOCKER-USER -j IPV64 &>/dev/null || iptables -I DOCKER-USER -j IPV64; \
 fi; \
 ip6tables -nL IPV64     &>/dev/null || ip6tables -N IPV64; \
 if [ \"\$AddInputChain\" = true ]; then ip6tables -C INPUT -j IPV64 &>/dev/null || ip6tables -I INPUT -j IPV64; fi; \

@@ -20,7 +20,7 @@ LOGROTATE_FILE="/etc/logrotate.d/ipv64_blocklist"
 SERVICE_NAME="ipv64_blocklist"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 TIMER_FILE="/etc/systemd/system/${SERVICE_NAME}.timer"
-PRE_CHAIN_SCRIPT="$WORK_DIR/pre_chain_setup.sh"
+CHAIN_SCRIPT="$WORK_DIR/chain_setup.sh"
 log(){ echo "$*"; }
 # 🧪 Prüfe, ob IPv64 bereits installiert ist
 if [[ -f "/usr/local/bin/ipv64" || -d "/etc/ipv64" ]]; then

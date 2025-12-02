@@ -27,6 +27,7 @@ update_blocklist() {
   [[ $url =~ ^https://[A-Za-z0-9./?=_-]+$ ]] || { log "Ungültige URL: $url"; return 1; }
   local key=$(basename "$url")
   key="${key%.*}"
+  key="${key//ipv64_blocklist_/}"
   local ip_list="$BLOCKLIST_DIR/${key}.txt"
   local tmp; tmp=$(mktemp)
   log "⬇️ Lade $url"

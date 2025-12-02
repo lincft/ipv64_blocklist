@@ -20,6 +20,7 @@ LOGROTATE_FILE="/etc/logrotate.d/ipv64_blocklist"
 SERVICE_NAME="ipv64_blocklist"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 TIMER_FILE="/etc/systemd/system/${SERVICE_NAME}.timer"
+PRE_CHAIN_SCRIPT="$WORK_DIR/pre_chain_setup.sh"
 log(){ echo "$*"; }
 # 🧪 Prüfe, ob IPv64 bereits installiert ist
 if [[ -f "/usr/local/bin/ipv64" || -d "/etc/ipv64" ]]; then
@@ -73,6 +74,27 @@ EOF
 # 5) Skripte installieren
 install -m 700 "$SCRIPT_SRC" "$SCRIPT_TGT"
 install -m 755 "$WRAPPER_SRC" "$WRAPPER_TGT"
+# 5a) NEU: Externes ExecStartPre Skript erzeugen
+cat >"$CHAIN_SCRIPT" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+source /etc/ipv64/conf/service.conf
+iptables -nL IPV64 &>/dev/null || iptables -N IPV64
+if [ "$AddInputChain" = true ]; then
+  iptables -C INPUT -j IPV64 &>/dev/null || iptables -I INPUT -j IPV64
+fi
+if [ "$AddDockerChain" = true ] && iptables -nL DOCKER-USER &>/dev/null; then
+  iptables -C DOCKER-USER -j IPV64 &>/dev/null || iptables -I DOCKER-USER -j IPV64
+fi
+ip6tables -nL IPV64 &>/dev/null || ip6tables -N IPV64
+if [ "$AddInputChain" = true ]; then
+  ip6tables -C INPUT -j IPV64 &>/dev/null || ip6tables -I INPUT -j IPV64
+fi
+if [ "$AddDockerChain" = true ] && ip6tables -nL DOCKER-USER &>/dev/null; then
+  ip6tables -C DOCKER-USER -j IPV64 &>/dev/null || ip6tables -I DOCKER-USER -j IPV64
+fi
+EOF
+chmod 700 "$CHAIN_SCRIPT"
 # 6) systemd Service & Timer erstellen
 CALENDAR=$(grep '^OnCalendar=' "$SERVICE_CONF" | cut -d= -f2)
 BOOTSEC=$(grep '^OnBootSec='  "$SERVICE_CONF" | cut -d= -f2)
@@ -85,14 +107,7 @@ ConditionPathExists=$URL_FILE
 [Service]
 Type=oneshot
 Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ExecStartPre=/usr/bin/env bash -c "\ 
-source $SERVICE_CONF; \ 
-iptables -nL IPV64 &>/dev/null || iptables -N IPV64; \ 
-if [ \"\$AddInputChain\" = true ]; then iptables -C INPUT -j IPV64 &>/dev/null || iptables -I INPUT -j IPV64; fi; \ 
-if [ \"\$AddDockerChain\" = true ] && iptables -nL DOCKER-USER &>/dev/null; then iptables -C DOCKER-USER -j IPV64 &>/dev/null || iptables -I DOCKER-USER -j IPV64; fi; \
-ip6tables -nL IPV64 &>/dev/null || ip6tables -N IPV64; \ 
-if [ \"\$AddInputChain\" = true ]; then ip6tables -C INPUT -j IPV64 &>/dev/null || ip6tables -I INPUT -j IPV64; fi; \ 
-if [ \"\$AddDockerChain\" = true ] && ip6tables -nL DOCKER-USER &>/dev/null; then ip6tables -C DOCKER-USER -j IPV64 &>/dev/null || ip6tables -I DOCKER-USER -j IPV64; fi"
+ExecStartPre=$CHAIN_SCRIPT
 ExecStart=$SCRIPT_TGT
 [Install]
 WantedBy=multi-user.target
